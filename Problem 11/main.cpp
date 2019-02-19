@@ -12,6 +12,7 @@ using namespace std;
 
 map<char, int> charMap;
 int** scoreMatrix;
+int** traceback;
 
 int parseBlosum62(string filename="blosum62.txt"){
     string line;
@@ -59,7 +60,7 @@ int parseBlosum62(string filename="blosum62.txt"){
 }
 
 
-int alignscore(string X, string Y, int** score, int gapStart, int gapExtend){
+int alignscore(string X, string Y, int** score, int gapStart, int gapExtend, int& bestI, int& bestJ){
     int m = X.length();
     int n = Y.length();
 
@@ -67,11 +68,17 @@ int alignscore(string X, string Y, int** score, int gapStart, int gapExtend){
     M = new int*[m+1];
     XGAP = new int*[m+1];
     YGAP = new int*[m+1];
+    traceback = new int*[m+1];
 
     for (size_t i = 0; i <= m; i++) {
         M[i] = new int[n+1];
         XGAP[i] = new int[n+1];
         YGAP[i] = new int[n+1];
+        traceback[i] = new int[n+1];
+        // traceback[i] = new int*[n+1];
+        // for (size_t j = 0; j <= n; j++) {
+        //     traceback[i][j] = new int[3];
+        // }
     }
 
 
@@ -80,6 +87,7 @@ int alignscore(string X, string Y, int** score, int gapStart, int gapExtend){
             M[i][j] = 0;
             XGAP[i][j] = 0;
             YGAP[i][j] = 0;
+            traceback[i][j] = 0;
         }
     }
 
@@ -119,15 +127,30 @@ int alignscore(string X, string Y, int** score, int gapStart, int gapExtend){
             //
             // }
             M[i][j] = max(score[a][b] + max(max(XGAP[i-1][j-1], YGAP[i-1][j-1]),  M[i-1][j-1]), 0);
+            if(M[i][j] > maxScore){
+                maxScore = M[i][j] ;
+                bestI = i;
+                bestJ = j;
+
+            }
+
+
+            if(M[i][j] - score[a][b] == M[i-1][j-1]){
+                traceback[i][j] = 1;
+            }else if(M[i][j] - score[a][b] == XGAP[i-1][j-1]){
+                traceback[i][j] = 2;
+            }else if(M[i][j] - score[a][b] == YGAP[i-1][j-1]){
+                traceback[i][j] = 3;
+            }else{
+                traceback[i][j] = 0;
+            }
+
 
             XGAP[i][j] =  (max(max(gapStart + M[i][j-1], gapStart + YGAP[i][j-1]),  gapExtend + XGAP[i][j-1]));
 
             YGAP[i][j] =  (max(max(gapStart + M[i-1][j], gapStart  + XGAP[i-1][j]),  gapExtend + YGAP[i-1][j]));
 
-            if(M[i][j] > maxScore){
-                maxScore = M[i][j] ;
 
-            }
         }
     }
 
@@ -192,7 +215,24 @@ int main() {
     int gapStart = 11;
     int gapExtend = 1;
 
+    int i, j, bestI, bestJ;
     parseBlosum62();
-    cout<<alignscore(s1, s2, scoreMatrix, gapStart, gapExtend);
+    cout<<alignscore(s1, s2, scoreMatrix, gapStart, gapExtend, bestI, bestJ)<<endl;
+
+    i = bestI;
+    j = bestJ;
+    while(traceback[i][j] != 0 && (i!=0 || j!=0) ){
+        if(traceback[i][j] == 1){ //from M
+            i--;
+            j--;
+        }else if(traceback[i][j] == 2){ //from X
+            j--;
+        }else if(traceback[i][j] == 3){ //from Y
+            i--;
+        }
+    }
+    cout<<s1.substr(i, bestI-i)<<endl;
+    cout<<s2.substr(j, bestJ-j)<<endl;
+
     return 0;
 }

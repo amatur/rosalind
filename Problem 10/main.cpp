@@ -98,12 +98,12 @@ int alignCost(string X, string Y, int** cost, int gap){
         }
     }
 
-    // for (size_t i = 0; i < m; i++) {
-    //     for (size_t j = 0; j < n; j++) {
-    //         cout<<opt[i][j] << " ";
-    //     }
-    //     cout<<endl;
-    // }
+    for (size_t i = 0; i <= m; i++) {
+        for (size_t j = 0; j <= n; j++) {
+            cout<<opt[i][j] << " ";
+        }
+        cout<<endl;
+    }
     return opt[m][n];
 
 }
