@@ -6,6 +6,7 @@
 #include <string>
 #include <sstream>
 #include<vector>
+#include <algorithm>
 #include<map>
 #include<set>
 #include<stack>
@@ -15,24 +16,6 @@ using namespace std;
 
 vector <string>  kmerList;
 
-class elem
-{
-    public:
-    string nodeLabel;
-    string assembled;
-    elem(string n, string a)
-    {
-        nodeLabel = n;
-        assembled = a;
-    }
-
-    // ostream& operator<< (ostream &out, elem const& data) {
-    //     out << data.nodeLabel << ':';
-    //     out << data.assembled << '';
-    //
-    //     return out;
-    // }
-};
 
 string purifyString(string s){
     char base[51];
@@ -91,129 +74,67 @@ void printGraph(map<string, vector<string> > adjList){
 }
 
 
-bool hasEdge(string from, string to, int k){
-    string overlapFrom = from.substr(1, k-1);
-    string overlapTo = to.substr(0, k-1);
-    return overlapFrom.compare(overlapTo)==0;
+vector<string> DFS(int k, map<string, vector<string> > adjList, string v, vector<string> circuitSoFar){
+    //cout<<"call";
+    //printGraph(adjList);
+    vector<string> circuit(circuitSoFar.begin(),circuitSoFar.end());
+    //cout<<adjList[v].size();
+    if(adjList[v].size() != 0){
+        int i = 0;
+        int n = adjList[v].size() ;
+        while(true){
+            //cout<<i<<endl;
+            if(i==n) break;
+            string neighborString = adjList[v].at(i);
+            //remove edge
+            circuit.push_back(adjList[v].at(i));
+            //map<string, vector<string> > adjListCopy;
+            //adjListCopy.insert(adjList.begin(), adjList.end());
+            adjList[v].erase(adjList[v].begin() + i);
+            //cout<<adjList[v].size();
+            //edgeCount[s.nodeLabel]--;
+
+            //printGraph(adjList);
+            DFS(k, adjList, neighborString, circuit);
+            //cout<<"after"<<endl;
+            //printGraph(adjList);
+            adjList[v].push_back(neighborString);
+
+            i++;
+
+            //add edge back
+        }
+    }else{
+        //circuit.push_back(v);
+        //
+        //print circuit so circuitSo circuitSoFar
+        for (int i = 0; i<circuitSoFar.size(); i++) {
+            cout<<circuitSoFar.at(i)<< " ";
+        }
+        cout<<endl;
+       // Back-tracking
+    }
+    return circuit;
 }
 
 
-bool assemble(int k, map<string, vector<string> > adjList){  //dfs
 
 
-    // Initially mark all verices as not visited
-    //printGraph(adjList);
-    //make a copy of adjlist
-    map<string, vector<string> > adjListCopy;
-    adjListCopy.insert(adjList.begin(), adjList.end());
-    //printGraph(adjListCopy);
-    //
-    int numVertices = adjList.size();
-    // //cout<<"edges: "<<countEdges(adjList)<<endl;
-    //inefficient
-    map<string, int> edgeCount;
-    for ( map<string, vector<string> > :: iterator it = adjList.begin(); it != adjList.end(); ++it){
-        edgeCount[it->first] = it->second.size();
-    }
-
-
-
-    // Create a stack for DFS
-    stack<elem> stack;
-
-
-
-//string start = kmerList.at(0).substr(0, k-1);
+void assemble(int k, map<string, vector<string> > adjList){
     string start = kmerList.at(0).substr(1, k-1);
-    string assembled = "";
-    //cout<<start;
+    vector<string> ck;
+    ck.push_back(start);
 
-    elem s(start, assembled);
-    stack.push(s);
+    vector<string>::iterator it = find(adjList[kmerList.at(0).substr(0, k-1)].begin(), adjList[kmerList.at(0).substr(0, k-1)].end(), start);
+    adjList[kmerList.at(0).substr(0, k-1)].erase(it);
+    printGraph(adjList);
 
-
-        // vector to store final circuit
-        vector<string> circuit;
-
-    cout<<"starting at: "<<start<<endl;
-    while(!stack.empty()){
-        // If there's remaining edge
-        if (edgeCount[s.nodeLabel]!=0)
-        {
-            // Push the vertex
-            stack.push(s);
-
-            // Find the next vertex using an edge
-            string nextNodeLabel = adjList[s.nodeLabel].back();
-
-            // and remove that edge
-            edgeCount[s.nodeLabel]--;
-            adjList[s.nodeLabel].pop_back();
-
-            // Move to next vertex
-            elem nextNode(nextNodeLabel, assembled);
-            s = nextNode;
-        }
-
-        // back-track to find remaining circuit
-        else
-        {
-            circuit.push_back(s.nodeLabel);
-
-            // Back-tracking
-            s = stack.top();
-            stack.pop();
-        }
-
-
-
-
-        // s = stack.top();
-        // stack.pop();
-        //
-        // //if (!visited[s])
-        // //{
-        // cout << "elem: " <<s.nodeLabel << ", " <<s.assembled<<endl;
-        // assembled = assembled + s.nodeLabel[0] ;
-        //     //visited[s] = true;
-        // //}
-        // //
-        // vector<string> adjS = adjList[s.nodeLabel];
-        // if(adjS.empty()){
-        //     cout<<"copy edges: "<<countEdges(adjList)<<endl;
-        //     if(countEdges(adjList) == 0){
-        //         cout<<assembled<<" asss"<<endl;
-        //     }
-        //     //continue;
-        // }
-        // for(vector<string> :: iterator it = adjS.begin(); it!= adjS.end(); it++){
-        //     string neighbor = (*it);
-        //     stack.push(elem(neighbor,assembled));
-        // }
-
-
-
-    }
-
-
-     for (int i=circuit.size()-1; i>=0; i--) {
-        cout<<circuit.at(i)<<" ";
+    vector<string> vec = DFS(k, adjList, start, ck);
+    for (int i = 0; i<vec.size(); i++) {
+        cout<<vec.at(i)<< " ";
     }
     cout<<endl;
-
-
-    cout<<"copy edges: "<<countEdges(adjListCopy)<<endl;
-
-    cout<<"FINAL: "<<assembled<<endl;
-
-    if(countEdges(adjListCopy) == 0){
-        cout<<assembled;
-    }
-    return countEdges(adjListCopy) == 0;
-    //return false;
 }
-
-
 
 map<string, vector<string> > makeDBGfromKmers(vector<string> kmerList, int k){
     map<string, vector<string> > adjList; //simple cycle
@@ -231,7 +152,7 @@ map<string, vector<string> > makeDBGfromKmers(vector<string> kmerList, int k){
         //     adjList[kmerFrom] = vector<string>();
         // }
         adjList[kmerFrom].push_back(kmerTo);
-        cout<<kmerFrom<<" -> "<<kmerTo<<endl;
+        //cout<<kmerFrom<<" -> "<<kmerTo<<endl;
         //added
         if(adjList.count(kmerTo)==0){
             adjList[kmerTo] = vector<string>();
@@ -240,7 +161,7 @@ map<string, vector<string> > makeDBGfromKmers(vector<string> kmerList, int k){
         string kmerToRC = reverseComplement(kmerTo);
         string kmerFromRC = reverseComplement(kmerFrom);
 
-        cout<<kmerToRC<<" -> "<<kmerFromRC<<endl;
+        //cout<<kmerToRC<<" -> "<<kmerFromRC<<endl;
         adjList[kmerToRC].push_back(kmerFromRC);
         if(adjList.count(kmerFromRC)==0){
             adjList[kmerFromRC] = vector<string>();
@@ -270,7 +191,8 @@ int main() {
     }
 
     adjList = makeDBGfromKmers(kmerList, k); //edge: (k+1) mer, node: k mer, however k is +1
-    bool twoCycle = assemble(k, adjList);
+//printGraph(adjList);
+    assemble(k, adjList);
 
 
     return 0;
