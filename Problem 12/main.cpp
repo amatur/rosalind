@@ -19,6 +19,7 @@ using namespace std;
 map<char, int> charMap;
 int** costMatrix;
 
+
 int parseBlosum62(){
     stringstream blosumString("A  C  D  E  F  G  H  I  K  L  M  N  P  Q  R  S  T  V  W  Y\nA  4  0 -2 -1 -2  0 -2 -1 -1 -1 -1 -2 -1 -1 -1  1  0  0 -3 -2\nC  0  9 -3 -4 -2 -3 -3 -1 -3 -1 -1 -3 -3 -3 -3 -1 -1 -1 -2 -2\nD -2 -3  6  2 -3 -1 -1 -3 -1 -4 -3  1 -1  0 -2  0 -1 -3 -4 -3\nE -1 -4  2  5 -3 -2  0 -3  1 -3 -2  0 -1  2  0  0 -1 -2 -3 -2\nF -2 -2 -3 -3  6 -3 -1  0 -3  0  0 -3 -4 -3 -3 -2 -2 -1  1  3\nG  0 -3 -1 -2 -3  6 -2 -4 -2 -4 -3  0 -2 -2 -2  0 -2 -3 -2 -3\nH -2 -3 -1  0 -1 -2  8 -3 -1 -3 -2  1 -2  0  0 -1 -2 -3 -2  2\nI -1 -1 -3 -3  0 -4 -3  4 -3  2  1 -3 -3 -3 -3 -2 -1  3 -3 -1\nK -1 -3 -1  1 -3 -2 -1 -3  5 -2 -1  0 -1  1  2  0 -1 -2 -3 -2\nL -1 -1 -4 -3  0 -4 -3  2 -2  4  2 -3 -3 -2 -2 -2 -1  1 -2 -1\nM -1 -1 -3 -2  0 -3 -2  1 -1  2  5 -2 -2  0 -1 -1 -1  1 -1 -1\nN -2 -3  1  0 -3  0  1 -3  0 -3 -2  6 -2  0  0  1  0 -3 -4 -2\nP -1 -3 -1 -1 -4 -2 -2 -3 -1 -3 -2 -2  7 -1 -2 -1 -1 -2 -4 -3\nQ -1 -3  0  2 -3 -2  0 -3  1 -2  0  0 -1  5  1  0 -1 -2 -2 -1\nR -1 -3 -2  0 -3 -2  0 -3  2 -2 -1  0 -2  1  5 -1 -1 -3 -3 -2\nS  1 -1  0  0 -2  0 -1 -2  0 -2 -1  1 -1  0 -1  4  1 -2 -3 -2\nT  0 -1 -1 -1 -2 -2 -2 -1 -1 -1 -1  0 -1 -1 -1  1  5  0 -2 -2\nV  0 -1 -3 -2 -1 -3 -3  3 -2  1  1 -3 -2 -2 -3 -2  0  4 -3 -1\nW -3 -2 -4 -3  1 -2 -2 -3 -3 -2 -1 -4 -4 -2 -3 -3 -2 -3 11  2\nY -2 -2 -3 -2  3 -3  2 -1 -2 -1 -1 -2 -3 -1 -2 -2 -2 -1  2  7");
 
@@ -107,7 +108,15 @@ int scoreNW_linearSpace(string X, string Y, int** cost, int gap, int* lastLine){
     //     }
     //     cout<<endl;
     // }
-    return opt[1][n];
+    int score = opt[1][n];
+
+    for( int i = 0 ; i < 2 ; i++ )
+    {
+        delete[] opt[i];
+    }
+    delete[] opt;
+
+    return score;
 
 }
 
@@ -203,6 +212,14 @@ void alignedStringsNW(string X, string Y, int** cost, int gap, string& Z, string
     //     cout<<endl;
     // }
 
+    for( int i = 0 ; i <=m ; i++ )
+    {
+        delete[] opt[i];
+        delete[] traceback[i];
+    }
+    // delete actual matrix
+    delete[] opt;
+    delete[] traceback;
     return;
 }
 
@@ -261,6 +278,9 @@ void Hirschberg(string X, string Y, int** cost, int gap, string& Z, string& W){
         string Z1, Z2, W1, W2;
         Hirschberg(XLeft, YDown, cost, gap, Z1, W1);
         Hirschberg(XRight, YTop, cost, gap, Z2, W2);
+
+        delete [] scoreLeft;
+        delete [] scoreRight;
         Z = Z1 + Z2;
         W = W1 + W2;
     }
@@ -282,6 +302,7 @@ int main() {
 
     int* p = new int[Y.length()+1];
     cout<<scoreNW_linearSpace( X,  Y,  costMatrix, 5, p)<<endl;
+    delete[] p;
     //alignedStringsNW(Y, X, costMatrix, 5, Z, W);
     Hirschberg(X, Y, costMatrix, 5, Z, W);
     cout<<Z<<endl;
